@@ -1,0 +1,38 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "aks-ky"
+          git config user.email "122727212+aks-ky@users.noreply.github.com"
+
+      - name: Add Upstream
+        run: |
+          git remote add upstream https://github.com/Hheihi/cursor-help.git
+          git fetch upstream
+
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          git fetch upstream
+          git diff --quiet upstream/main || echo "changes"
+
+      - name: Merge Changes
+        if: steps.check_changes.outputs.changes == 'changes'
+        run:
+          git merge upstream/main --allow-unrelated-histories
+          git push origin main
